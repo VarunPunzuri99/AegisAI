@@ -1,0 +1,60 @@
+# AegisAI — Agentic Prompt Injection Firewall
+#
+# Development stack: backend (FastAPI), frontend (Next.js), postgres.
+# Do not use real secrets in this file; copy from backend/.env.example.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: aegisai-postgres
+    environment:
+      POSTGRES_USER: aegisai
+      POSTGRES_PASSWORD: aegisai
+      POSTGRES_DB: aegisai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aegisai -d aegisai"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: aegisai-backend
+    env_file:
+      - ./backend/.env.example
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+psycopg://aegisai:aegisai@postgres:5432/aegisai
+      CORS_ORIGINS: http://localhost:3000,http://frontend:3000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: aegisai-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
