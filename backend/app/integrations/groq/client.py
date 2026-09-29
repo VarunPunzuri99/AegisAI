@@ -88,11 +88,12 @@ class GroqClient:
                 choice = completion.choices[0]
                 text = (choice.message.content or "").strip()
                 logger.info(
-                    "groq_chat_ok model=%s attempt=%s msg_chars=%s resp_len=%s",
+                    "groq_chat_ok model=%s attempt=%s msg_chars=%s resp_len=%s retries=%s",
                     model,
                     attempt + 1,
                     total_chars,
                     len(text),
+                    attempt,
                 )
                 return text
             except GroqIntegrationError as exc:
@@ -102,13 +103,20 @@ class GroqClient:
                 if isinstance(exc, GroqRateLimitError):
                     if attempt + 1 >= attempts:
                         raise
-                    delay = exc.retry_after_seconds or 1.0
+                    # Bounded exponential backoff; honor Retry-After when present.
+                    delay = exc.retry_after_seconds or (0.5 * (2**attempt))
                     time.sleep(min(delay, 5.0))
                     continue
-                if isinstance(exc, (GroqTimeoutError, GroqTransientError)):
+                if isinstance(exc, GroqTimeoutError):
+                    # Timeout: no aggressive retry loop — at most one retry if budget remains.
+                    if attempt + 1 >= attempts or attempt >= 1:
+                        raise
+                    time.sleep(0.25)
+                    continue
+                if isinstance(exc, GroqTransientError):
                     if attempt + 1 >= attempts:
                         raise
-                    time.sleep(0.25 * (attempt + 1))
+                    time.sleep(min(0.25 * (2**attempt), 5.0))
                     continue
                 raise
             except Exception as exc:
@@ -119,13 +127,18 @@ class GroqClient:
                 if isinstance(mapped, GroqRateLimitError):
                     if attempt + 1 >= attempts:
                         raise mapped
-                    delay = mapped.retry_after_seconds or 1.0
+                    delay = mapped.retry_after_seconds or (0.5 * (2**attempt))
                     time.sleep(min(delay, 5.0))
                     continue
-                if isinstance(mapped, (GroqTimeoutError, GroqTransientError)):
+                if isinstance(mapped, GroqTimeoutError):
+                    if attempt + 1 >= attempts or attempt >= 1:
+                        raise mapped
+                    time.sleep(0.25)
+                    continue
+                if isinstance(mapped, GroqTransientError):
                     if attempt + 1 >= attempts:
                         raise mapped
-                    time.sleep(0.25 * (attempt + 1))
+                    time.sleep(min(0.25 * (2**attempt), 5.0))
                     continue
                 raise mapped
 
@@ -160,7 +173,9 @@ class GroqClient:
             )
         if name in {"APITimeoutError", "TimeoutError"} or "timeout" in name.lower():
             return GroqTimeoutError("TIMEOUT", "Groq request timed out")
-        if name in {"APIConnectionError", "InternalServerError"} or (
+        if name in {"APIConnectionError"} or "connection" in name.lower():
+            return GroqTransientError("NETWORK_ERROR", "Groq network error")
+        if name in {"InternalServerError"} or (
             isinstance(status, int) and status >= 500
         ):
             return GroqTransientError("PROVIDER_ERROR", "Groq provider error")

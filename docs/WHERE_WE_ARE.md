@@ -1,7 +1,7 @@
 # AegisAI — Where We Are
 
-**Last updated:** 2026-09-24  
-**Current checkpoint:** Phase 9 complete → **next = Phase 10 (Tool Firewall)**  
+**Last updated:** 2026-09-29  
+**Current checkpoint:** Phase 18 complete → **Hackathon RC-1 (architecture frozen)**  
 **Product:** AegisAI — Agentic Prompt Injection Firewall (ET AI Hackathon)
 
 Use this file as the single orientation doc: what is done, what we use, where the code lives, and what comes next.
@@ -15,16 +15,25 @@ For pipeline diagrams see [`architecture/system-architecture.md`](./architecture
 
 ```text
 Evidence → Fusion → Deterministic Risk   ✅ DONE
-Policy → ALLOW / REVIEW / BLOCK          ✅ DONE (decision only)
-Agent state + action proposals           ✅ DONE (no execution)
-Tool Firewall + execution                ⬜ Phase 10
+Policy → ALLOW / REVIEW / BLOCK          ✅ DONE
+Agent state + action proposals           ✅ DONE
+Tool Firewall + mock executor            ✅ DONE
+Evaluation / red-team harness            ✅ DONE (offline + live)
+Security dashboard / scanner / playground ✅ DONE
+Persistent security events / audit API   ✅ DONE
+Agent runtime simulation (Phase 14)      ✅ DONE
+Production hardening / live diagnostics  ✅ DONE (Phase 15)
+Authorization / MCP-ready boundary       ✅ DONE (Phase 16 — no real MCP)
+Dev auth + Mock MCP gateway              ✅ DONE (Phase 17 — no real MCP / IdP)
+Hackathon freeze / demo packaging        ✅ DONE (Phase 18 — RC-1)
+Real IdP / real MCP / external tools     ⬜ Post-hackathon
 ```
 
 Detection answers “what evidence do we have?”  
 Risk answers “how risky is this?”  
 Policy answers “what should AegisAI decide?”  
 Agent answers “what action is proposed, and at what action-risk?”  
-**Tool Firewall (not yet built)** independently authorizes/denies actual tool calls.
+Tool Firewall answers “is this specific tool call authorized?” (mock execute only).
 
 ---
 
@@ -82,21 +91,41 @@ Agent answers “what action is proposed, and at what action-risk?”
                         ▼
             READY_FOR_TOOL_GUARD
                         │
+                        ▼
+              AUTHORIZATION (identity·tenant·capability)  Phase 16 ✅
+                        │
+                        ▼
+                 TOOL FIREWALL          Phase 10 ✅
+                        │
+              ┌─────────┼─────────┐
+              ▼         ▼         ▼
+            DENY   REQUIRES_   ALLOW
+                   APPROVAL      │
+                                 ▼
+                    REPLAY PROTECTION
+                                 │
+                                 ▼
+                          MOCK EXECUTOR / MockToolTransport
+                                 │
+                                 ▼
+                    AGENT RUNTIME + OBSERVABILITY  Phase 14–15 ✅
+                                 │
                  ─── CURRENT STOP ───
-              (no tool execution yet)
+              (MCP-ready authz; no real MCP / external tools)
                         │
                         ▼
               ╔═══════════════════╗
-              ║  PHASE 10 (NEXT)  ║
-              ║  TOOL FIREWALL    ║
+              ║  HACKATHON RC-1   ║
+              ║  ARCHITECTURE     ║
+              ║  FROZEN           ║
               ╚═══════════════════╝
 ```
 
-Scan API (`POST /api/v1/scans`) stores scan **metadata** today. Detection + policy run via `SecurityDetectionService`; agent workflow via `AgentSecurityWorkflow` / `AgentSecurityService`.
+Scan API stores metadata. Detection + policy via `SecurityDetectionService`; agent via `AgentSecurityWorkflow`; authz via `AuthorizationService`; authn via development bearer; MCP via `MCPGateway` → `MockMCPServer` only. Phase 18 packages demo/docs only.
 
 ---
 
-## Phases completed (1–9)
+## Phases completed (1–18)
 
 | Phase | Name | Outcome |
 |-------|------|---------|
@@ -108,15 +137,26 @@ Scan API (`POST /api/v1/scans`) stores scan **metadata** today. Detection + poli
 | **6** | Semantic analysis | GPT-OSS-Safeguard 20B + policy → `SemanticSecurityAssessment` |
 | **7** | Fusion + risk | Evidence fusion → `UnifiedSecurityAssessment` + 0–100 risk |
 | **8** | Policy engine | `evaluate_policy` → ALLOW / REVIEW / BLOCK (`PolicyDecision`) |
-| **9** | Agent workflow | State + action proposals → `READY_FOR_TOOL_GUARD` (no execution) |
+| **9** | Agent workflow | State + action proposals → `READY_FOR_TOOL_GUARD` |
+| **10** | Tool firewall | Allowlist + authz + mock executor (no real side effects) |
+| **11** | Evaluation / red-team | Offline + live Groq harness (`aegis_security_eval_v1`) |
+| **12** | Security dashboard | Scanner, playground, evaluation UI + inspect APIs |
+| **13** | Persistent audit | `security_events` + `GET /audit` + dashboard activity |
+| **14** | Agent runtime simulation | Session/context/planner + scenarios + `/agent/*` APIs + UI |
+| **15** | Production hardening | Observability, review analysis, readiness, docs (no threshold tuning) |
+| **16** | Authorization boundary | Principals, tenant isolation, Authz→Firewall, MockToolTransport (no real MCP) |
+| **17** | Authn + Mock MCP gateway | Dev bearer auth, protected APIs, MockMCPServer + integrity (no real MCP/IdP) |
+| **18** | Hackathon freeze | Validation, demo docs, README, pitch — architecture frozen |
 
 ### Intentionally not done yet
 
-- Tool firewall / actual tool execution
+- Real email / DB / shell / MCP / payments
 - External HTTP enforcement
-- Wiring decisions into Scan API persistence
-- Dashboard / attack playground
 - Multimodal (PDF / DOCX / OCR / images)
+- Production authentication / IdP / SSO / OAuth
+- Tamper-evident / SIEM audit ledger
+- Adaptive Safeguard routing (documented only in Phase 15)
+- Phase 19+ (post-hackathon)
 
 ---
 
@@ -128,8 +168,8 @@ Scan API (`POST /api/v1/scans`) stores scan **metadata** today. Detection + poli
 |-------|--------|
 | Backend | Python, FastAPI, Pydantic, SQLAlchemy 2.x, Alembic |
 | DB | PostgreSQL (Docker); tests often SQLite |
-| Frontend | Next.js + TypeScript (landing foundation; no security UI yet) |
-| Tests | pytest (Phase 8 checkpoint — see test counts below) |
+| Frontend | Next.js App Router + TypeScript security console |
+| Tests | pytest (backend); vitest (frontend types) |
 | Secrets | `backend/.env` only (not monorepo root for backend runtime) |
 
 ### Groq models
@@ -186,8 +226,10 @@ Severity from score: `0–19 LOW` · `20–49 MEDIUM` · `50–74 HIGH` · `75�
 | Risk | `backend/app/security/risk_engine.py`, `risk_config.py` |
 | Policy | `backend/app/security/policy_engine.py`, `policies/policy_types.py` |
 | Agent workflow | `backend/app/agents/` |
+| Tool firewall | `backend/app/tools/` |
 | Pipeline orchestration | `backend/app/services/security_detection.py` |
 | Agent bridge | `backend/app/services/agent_security.py` |
+| Tool guard | `backend/app/services/tool_guard.py` |
 | Groq client | `backend/app/integrations/groq/` |
 | Fixtures | `datasets/attacks/`, `datasets/benign/` |
 
@@ -204,6 +246,7 @@ Severity from score: `0–19 LOW` · `20–49 MEDIUM` · `50–74 HIGH` · `75�
 | [`security/fusion-and-risk.md`](./security/fusion-and-risk.md) | Phase 7 |
 | [`security/policy-engine.md`](./security/policy-engine.md) | Phase 8 |
 | [`security/agentic-workflow.md`](./security/agentic-workflow.md) | Phase 9 |
+| [`security/tool-firewall.md`](./security/tool-firewall.md) | Phase 10 |
 
 ---
 
@@ -270,16 +313,8 @@ Rules no match + both AI unavailable
 
 | Phase | Focus |
 |-------|--------|
-| **8** | Policy Engine — ✅ COMPLETE (decision only) |
-| **9** | Agentic workflow — ✅ COMPLETE (proposals only) |
-| **10** | Tool Firewall (independent of LLM / upstream label) |
-| **11** | Evaluation expansion |
-| **12** | Dashboard |
-| **13** | Attack Playground |
-| **14** | PDF / DOCX / Image / OCR |
-| **15** | Red team + hardening |
-| **16** | Demo + pitch |
-| **17** | Final audit |
+| **11–16** | Evaluation → dashboard → audit → runtime → hardening → authorization — ✅ COMPLETE |
+| **17** | Real MCP / external tools (NOT STARTED) — deferred |
 
 ### Phase 8 defaults (implemented)
 
@@ -314,10 +349,14 @@ See [`security/policy-engine.md`](./security/policy-engine.md).
 | Can we run Safeguard semantic analysis? | Yes |
 | Can we fuse + score risk? | Yes |
 | Can we decide ALLOW/REVIEW/BLOCK? | **Yes (in-memory)** |
-| Can we propose agent actions? | **Yes (no execution)** |
+| Can we propose agent actions? | **Yes (no real execution)** |
+| Can we authorize tool calls? | **Yes (identity + firewall)** |
+| Tenant isolation? | **Yes (deterministic DENY)** |
+| Do tools run for real? | **No — mock/sandbox only** |
 | Is the decision enforced externally? | **No — later** |
 | Does Scan API persist the decision? | **Not yet** |
-| Are tools firewalled / executed? | **No — Phase 10** |
+| Real MCP / email / shell? | **No** |
+| Production-ready? | **No** |
 
 ---
 

@@ -1,0 +1,141 @@
+{
+  "phase": 16,
+  "generated_at": "2026-09-29T12:42:03.541316+00:00",
+  "passed": 11,
+  "total": 11,
+  "metrics": {
+    "authorized_actions_allowed": 1,
+    "unauthorized_actions_denied": 1,
+    "cross_tenant_actions_denied": 1,
+    "privilege_escalation_denied": 1,
+    "approval_bypasses_denied": 1,
+    "replay_attacks_denied": 1,
+    "unknown_tools_denied": 1,
+    "intent_mismatch_denied": 1,
+    "fail_closed_denied": 1
+  },
+  "rows": [
+    {
+      "case_id": "AUTHZ-ALLOW-001",
+      "category": "authorized_allow",
+      "expected": "ALLOW",
+      "actual": "ALLOW",
+      "executed": true,
+      "passed": true,
+      "reason_codes": [
+        "EXECUTION_SUCCESS"
+      ]
+    },
+    {
+      "case_id": "AUTHZ-DENY-PERM-001",
+      "category": "unauthorized_deny",
+      "expected": "DENY",
+      "actual": "DENY",
+      "executed": false,
+      "passed": true,
+      "reason_codes": [
+        "PERMISSION_MISSING"
+      ]
+    },
+    {
+      "case_id": "AUTHZ-TENANT-001",
+      "category": "cross_tenant_deny",
+      "expected": "DENY",
+      "actual": "DENY",
+      "executed": false,
+      "passed": true,
+      "reason_codes": [
+        "TENANT_MISMATCH"
+      ]
+    },
+    {
+      "case_id": "AUTHZ-ESC-001",
+      "category": "privilege_escalation_deny",
+      "expected": "DENY",
+      "actual": "DENY",
+      "executed": false,
+      "passed": true,
+      "reason_codes": [
+        "PERMISSION_MISSING"
+      ]
+    },
+    {
+      "case_id": "AUTHZ-INTENT-001",
+      "category": "intent_mismatch_deny",
+      "expected": "DENY",
+      "actual": "DENY",
+      "executed": false,
+      "passed": true,
+      "reason_codes": [
+        "INTENT_MISMATCH"
+      ]
+    },
+    {
+      "case_id": "AUTHZ-BLOCK-001",
+      "category": "policy_block_deny",
+      "expected": "DENY",
+      "actual": "DENY",
+      "executed": false,
+      "passed": true,
+      "reason_codes": [
+        "POLICY_BLOCK"
+      ]
+    },
+    {
+      "case_id": "AUTHZ-UNKNOWN-001",
+      "category": "unknown_tool_deny",
+      "expected": "DENY",
+      "actual": "DENY",
+      "executed": false,
+      "passed": true,
+      "reason_codes": [
+        "TOOL_UNKNOWN"
+      ]
+    },
+    {
+      "case_id": "AUTHZ-PRINCIPAL-001",
+      "category": "unknown_principal_deny",
+      "expected": "DENY",
+      "actual": "DENY",
+      "executed": false,
+      "passed": true,
+      "reason_codes": [
+        "PRINCIPAL_UNKNOWN"
+      ]
+    },
+    {
+      "case_id": "AUTHZ-FAILCLOSED-001",
+      "category": "fail_closed",
+      "expected": "DENY",
+      "actual": "DENY",
+      "executed": false,
+      "passed": true,
+      "reason_codes": [
+        "TENANT_MISSING"
+      ]
+    },
+    {
+      "case_id": "AUTHZ-REPLAY-001",
+      "category": "replay_deny",
+      "expected": "DENY",
+      "actual": "DENY",
+      "executed": false,
+      "passed": true,
+      "reason_codes": [
+        "ACTION_ALREADY_PROCESSED"
+      ]
+    },
+    {
+      "case_id": "AUTHZ-APPROVAL-BLOCK-001",
+      "category": "approval_bypass_deny",
+      "expected": "DENY",
+      "actual": "DENY",
+      "executed": false,
+      "passed": true,
+      "reason_codes": [
+        "POLICY_BLOCK"
+      ]
+    }
+  ],
+  "note": "Phase 16 authorization evaluation. Separate from Phase 11 detection F1. Not a production security guarantee. No real MCP."
+}

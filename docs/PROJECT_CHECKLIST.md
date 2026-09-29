@@ -137,40 +137,146 @@ Track progress across phases. Check items only when actually completed.
 - [x] Agent audit metadata
 - [x] Agent security unit tests
 - [x] `docs/security/agentic-workflow.md`
-- [ ] Protected agent *execution* path — Phase 10+
+- [x] Protected agent *execution* path — Phase 10 tool firewall + mock executor
 - [ ] Instruction / data separation in prompts — later
 - [ ] Demo agent scenario for hackathon — later
 
-## Tool firewall
+## Tool firewall (Phase 10)
 
-- [ ] Independent tool policy checks
-- [ ] Demo tools (`send_test_email`, `read_demo_secret`, `delete_demo_record`)
-- [ ] Deny / allow auditing for tool calls
+- [x] Tool definitions + static registry (allowlist)
+- [x] Tool authorization (permissions + target scope)
+- [x] Parameter / schema validation
+- [x] Intent alignment enforcement
+- [x] Prompt-injection security-state enforcement
+- [x] Approval requirement metadata (trusted context only)
+- [x] Replay protection (in-memory action_id registry)
+- [x] Tool firewall decisions (ALLOW / DENY / REQUIRES_APPROVAL)
+- [x] Sandboxed/mock tool executor (no real side effects)
+- [x] Tool execution audit metadata + untrusted output marking
+- [x] Tool firewall unit + E2E tests
+- [x] `docs/security/tool-firewall.md`
+- [ ] Real external tools / MCP — later
+- [ ] Demo tools wired to UI — later
+
+## Evaluation / red-team (Phase 11)
+
+- [x] Versioned dataset (`aegis_security_eval_v1`, 145+)
+- [x] 9 attack categories + benign
+- [x] Indirect / encoded / multi-step / tool-abuse cases
+- [x] Privilege escalation / approval / replay / parameter cases
+- [x] Authorization matrix evaluation
+- [x] Security invariants
+- [x] End-to-end offline evaluation runner (`python -m app.evaluation.runner --full`)
+- [x] Detection / policy / tool firewall metrics
+- [x] FP / FN analysis in report
+- [x] Latency measurements (offline)
+- [x] Offline evaluation (default CI-safe)
+- [x] Optional live Groq gate preserved (not required for pytest)
+- [x] Regression: Phase 5–10 suites retained
+- [x] JSON + Markdown reports under `backend/evaluation/results/`
+- [x] `docs/security/evaluation-and-red-team.md`
+- [ ] Production monitoring — later
+- [ ] Live model benchmarking as default CI — not required
 
 ## Frontend
 
 - [x] Next.js + TypeScript foundation
-- [x] Landing page (brand + product description)
+- [x] Landing page (brand + product description) → redirects to dashboard
 - [x] Frontend `.env.example`
 - [x] Frontend Dockerfile
-- [ ] Dashboard
-- [ ] Live scan UI
-- [ ] Metrics visualizations (real data only)
+- [x] Dashboard shell + security overview (`/dashboard`)
+- [x] Live scan / inspect UI (`/scanner`)
+- [x] Metrics visualizations from evaluation API (real data only)
+- [x] Attack playground (`/attack-playground`)
+- [x] Agent runtime simulation UI (`/agent-runtime`)
+- [x] Evaluation + detection analytics pages
+- [x] Policy center (read-only) + tool security viewer
+- [x] Audit viewer (`/audit` connected to `GET /api/v1/audit`)
+- [x] API client layer (`frontend/lib/api`)
+- [x] Persistent security events + inspect → Scan association
+- [x] Dashboard activity from security events
+- [ ] Production authentication / hosted demo
 
 ## Attack playground
 
-- [ ] Safe demo attack catalog UI
-- [ ] Side-by-side allow / block demonstrations
-- [ ] Dataset-backed examples
+- [x] Safe demo attack catalog UI (backend scenarios)
+- [x] Side-by-side evidence / pipeline demonstrations
+- [x] Dataset-backed example payloads
+- [x] Run through Agent → Phase 14 runtime integration
+- [ ] File upload UI for document injection (optional later)
+
+## Agent runtime (Phase 14)
+
+- [x] Agent session + trust-aware context
+- [x] Deterministic planner + scenario library
+- [x] Reuses Agent Security Workflow + Tool Firewall + mock executor
+- [x] `GET /api/v1/agent/scenarios` + `POST /api/v1/agent/simulate`
+- [x] Bound approval + replay + session limits
+- [x] Runtime evaluation (separate from Phase 11 F1)
+- [x] Docs: `docs/security/agent-runtime.md`
+
+## Phase 15 hardening
+
+- [x] Provider telemetry + failure taxonomy
+- [x] Pipeline stage timing on inspect
+- [x] REVIEW / UNCERTAIN / conflict analysis (no threshold tuning)
+- [x] Red-team corpus v1 + expanded invariants
+- [x] `/health` vs `/readiness`; config validation; FAIL_CLOSED mode
+- [x] Dashboard providers / performance / review-analysis APIs + UI
+- [x] Threat model v2 + incident response docs
+- [x] Auth limitation documented (audit was unauthenticated through Phase 16)
+- [ ] Production authentication / IdP / OAuth — deferred (Phase 17 is development bearer only)
+
+## Phase 16 authorization
+
+- [x] Principal / permission / tenant model (simulator)
+- [x] AuthorizationService fail-closed resolver
+- [x] Wired before Tool Firewall (does not replace it)
+- [x] BoundApproval principal/tenant binding
+- [x] MockToolTransport MCP-ready abstraction (no real MCP)
+- [x] `POST /api/v1/auth/authorize` + read-only principal/capability APIs
+- [x] `/authorization` console (no grant UI)
+- [x] Authz evaluation + INV-19..29
+- [x] Docs: authorization / secure-tool-boundary / mcp-readiness
+
+## Phase 17 authentication + Mock MCP
+
+- [x] Development bearer authentication (`app.authentication`)
+- [x] Protected audit / dashboard / inspect / agent / auth / mcp APIs
+- [x] Endpoint access matrix + tenant-scoped audit
+- [x] Frontend Development Authentication (in-memory tokens)
+- [x] MCPGateway + MockMCPServer (no real MCP)
+- [x] Server allowlist, fingerprints, shadowing, schema validation
+- [x] `/mcp-security` console + simulate API
+- [x] INV-30..45 + phase17 evaluation
+- [x] Docs: authentication / mcp-gateway / mcp-threat-model / mcp-tool-integrity
+- [ ] Real MCP networking — NOT STARTED
+- [ ] Production OAuth/SSO — NOT STARTED
+
+## Phase 18 hackathon freeze
+
+- [x] Architecture frozen (no Phase 19 scope)
+- [x] Full backend/frontend validation
+- [x] E2E demo smoke suite
+- [x] Demo scenario catalog
+- [x] Final README + architecture diagram
+- [x] Pitch + demo script + submission checklist + RC notes
+- [x] Honest evaluation / REVIEW disclosure
 
 ## Evaluation
 
 - [x] Dataset directories (`datasets/attacks`, `datasets/benign`)
-- [ ] Labeled evaluation sets
-- [ ] Offline evaluation harness
-- [ ] Confusion / category metrics (when real)
+- [x] Labeled evaluation sets (`aegis_security_eval_v1`)
+- [x] Offline evaluation harness (`python -m app.evaluation.runner --full`)
+- [x] Confusion / category metrics (dataset-only; not production)
+- [x] Phase 14 runtime evaluation (`app.evaluation.runtime_eval`)
+- [x] Phase 15 live analysis (`app.evaluation.live_eval`)
 
 ## Red teaming
+
+- [x] Versioned red-team case pack (`red_team_v1` metadata flag)
+- [ ] Continuous red-team expansion — ongoing
+- [ ] Live Groq red-team benchmarking — optional later
 
 - [ ] Red-team protocol document
 - [ ] Structured findings log

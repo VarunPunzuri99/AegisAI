@@ -10,7 +10,16 @@
 **Phase 7:** Detection fusion + deterministic risk engine → `UnifiedSecurityAssessment` (evidence + score; no ALLOW/BLOCK).  
 **Phase 8:** Policy engine → `PolicyDecision` (ALLOW / REVIEW / BLOCK — decision only, no external enforcement).  
 **Phase 9:** Agent security workflow → state + action proposals → `READY_FOR_TOOL_GUARD` (no tool execution).  
-**Not implemented yet:** Tool firewall / execution, multimodal ingestion, dashboard.
+**Phase 10:** Tool Firewall + sandboxed mock executor → ALLOW / DENY / REQUIRES_APPROVAL (no real side effects).  
+**Phase 11:** Security evaluation + red-team regression harness (offline-first metrics).  
+**Phase 12:** Frontend security dashboard + thin inspect/dashboard APIs (no threshold changes).  
+**Phase 13:** Persistent security events + audit API (hash/metadata only; no SIEM).  
+**Phase 14:** Agent runtime simulation — session, trust-aware context, scenarios, Tool Firewall demo path, `/agent-runtime` UI.  
+**Phase 15:** Production hardening — provider observability, pipeline timing, review/UNCERTAIN analysis, readiness, threat/IR docs. No threshold tuning.  
+**Phase 16:** Authorization boundary — principals, tenant isolation, Authz before Tool Firewall, MockToolTransport. **No real MCP.**  
+**Phase 17:** Development authentication + protected APIs + Mock MCP gateway (integrity, shadowing, untrusted output). **No real MCP / IdP.**  
+**Phase 18:** Hackathon freeze — validation, demo packaging, documentation. Architecture frozen.  
+**Not implemented yet:** Real MCP / external tools, multimodal ingestion, production OAuth/SSO, Phase 19+.
 
 ---
 
@@ -47,22 +56,25 @@
 | Unified security assessment | Implemented |
 | Policy engine (`evaluate_policy` → ALLOW/REVIEW/BLOCK) | Implemented |
 | Agent security workflow + action proposals | Implemented |
+| Tool firewall + mock executor | Implemented |
+| Security evaluation / red-team harness | Implemented |
+| Inspect API (`POST /api/v1/inspect`) | Implemented |
+| Dashboard read APIs (evaluation/policy/tools/status/playground) | Implemented |
+| Frontend security console (App Router) | Implemented |
+| Security events table + audit API | Implemented |
+| Dashboard activity from security events | Implemented |
 
 ### PLANNED (later phases)
 
 | Area | Status |
 |------|--------|
-| Tool firewall + actual tool execution | Planned |
-| External policy enforcement (HTTP / agent / tools) | Planned |
+| Real external tools / MCP gateway | Planned |
 | Decision automation (SANITIZE/QUARANTINE persistence) | Planned |
-| Persist DetectionResult from live scan pipeline | Planned |
-| Wire detection pipeline into `POST /api/v1/scans` | Planned |
-| Agents / LangGraph | Planned |
-| Tool firewall | Planned |
+| Tamper-evident / SIEM audit export | Planned |
 | Multimodal ingestion (PDF, DOCX, OCR, images) | Planned |
-| Frontend dashboard / attack playground | Planned |
 | Real model tokenizer for chunking | Planned |
 | PostgreSQL integration tests (vs SQLite unit tests) | Planned |
+| Production authentication | Planned |
 
 ---
 
@@ -102,13 +114,23 @@ User / Application
         ↓
   READY_FOR_TOOL_GUARD            [IMPLEMENTED — handoff state]
         ↓
-  Tool Firewall                   [PLANNED — Phase 10]
+  Authorization                   [IMPLEMENTED — Phase 16 identity/tenant/capability]
+   ├── ALLOW
+   ├── DENY
+   └── REQUIRES_APPROVAL
         ↓
-  Agent / Tool Execution          [PLANNED]
+  Tool Firewall                   [IMPLEMENTED — Phase 10 — never bypassed]
+   ├── ALLOW
+   ├── DENY
+   └── REQUIRES_APPROVAL
         ↓
-   Tool Firewall                  [PLANNED]
+  Mock Tool Executor / Transport  [IMPLEMENTED — simulated only; MCP-ready interface]
         ↓
-  Audit / Telemetry               [PARTIAL — AuditEvent model + SCAN_CREATED]
+  MCP Gateway + MockMCPServer     [IMPLEMENTED — Phase 17B; no real MCP networking]
+        ↓
+  Real Tools / MCP                [PLANNED — Phase 18+]
+        ↓
+  Audit / Telemetry               [PARTIAL — SecurityEvent + Phase 15/17 metrics; authn on APIs]
 ```
 
 Detailed preprocessing notes: [docs/security/input-normalization.md](../security/input-normalization.md).
@@ -148,12 +170,16 @@ External callers that submit untrusted content. Treated as untrusted by default.
 
 ### Agent Execution / Tool Firewall
 
-**Agent workflow (Phase 9):** Security state + action proposals → `READY_FOR_TOOL_GUARD`. No tool execution. See `docs/security/agentic-workflow.md`.  
-**Tool firewall / execution:** Planned (Phase 10).
+**Agent workflow (Phase 9):** Security state + action proposals → `READY_FOR_TOOL_GUARD`. See `docs/security/agentic-workflow.md`.  
+**Tool firewall (Phase 10):** Independent allowlist / permissions / params / intent / approval / replay → mock executor. See `docs/security/tool-firewall.md`.  
+**Agent runtime simulation (Phase 14):** Deterministic scenario loop over the existing pipeline + firewall. See `docs/security/agent-runtime.md`.  
+**Real tools / MCP:** Planned.
 
 ### Audit / Telemetry
 
-**Partial:** `AuditEvent` table and `SCAN_CREATED` on scan create. Full pipeline events planned later. Never log API keys or raw submitted content.
+**Phase 13:** `SecurityEvent` persistence + `GET /api/v1/audit` (hash + decision metadata only).  
+**Phase 14:** Runtime simulations also persist security events with `scenario_id` metadata.  
+Never log API keys or raw submitted content.
 
 ---
 
@@ -179,7 +205,7 @@ The monorepo root `.env` is **not** read by the backend. Never put secrets in fr
 | Schemas | `backend/app/schemas/` |
 | Services | `backend/app/services/` |
 | Security logic | `backend/app/security/` (future detectors) |
-| Agents | `backend/app/agents/` |
+| Agents | `backend/app/agents/` (workflow + Phase 14 `runtime/`) |
 | Frontend | `frontend/` |
 | Evaluation data | `datasets/` |
 | Docs | `docs/` |

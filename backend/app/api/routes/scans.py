@@ -1,16 +1,28 @@
-"""Scan API routes."""
+"""Scan API routes — Phase 17A requires scan:inspect."""
 
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
+from app.authentication.dependencies import require_capability
+from app.authentication.types import AuthenticatedPrincipal
 from app.core.database import get_db
 from app.schemas.errors import ErrorResponse
 from app.schemas.scan import ScanCreateRequest, ScanListResponse, ScanResponse
 from app.services.scan_service import ScanService
 
-router = APIRouter(prefix="/scans", tags=["scans"])
+RequireScan = Annotated[
+    AuthenticatedPrincipal,
+    Depends(require_capability("scan:inspect")),
+]
+
+router = APIRouter(
+    prefix="/scans",
+    tags=["scans"],
+    dependencies=[Depends(require_capability("scan:inspect"))],
+)
 
 
 def _to_response(scan) -> ScanResponse:
@@ -23,7 +35,12 @@ def _to_response(scan) -> ScanResponse:
     "",
     response_model=ScanResponse,
     status_code=201,
-    responses={422: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
+    responses={
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        422: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
     summary="Create a scan",
     description=(
         "Create a scan metadata record for untrusted content. "
@@ -33,6 +50,7 @@ def _to_response(scan) -> ScanResponse:
 )
 def create_scan(
     body: ScanCreateRequest,
+    _principal: RequireScan,
     db: Session = Depends(get_db),
 ) -> ScanResponse:
     service = ScanService(db)
@@ -43,10 +61,11 @@ def create_scan(
 @router.get(
     "",
     response_model=ScanListResponse,
-    responses={422: {"model": ErrorResponse}},
+    responses={401: {"model": ErrorResponse}, 403: {"model": ErrorResponse}, 422: {"model": ErrorResponse}},
     summary="List scans",
 )
 def list_scans(
+    _principal: RequireScan,
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
@@ -64,11 +83,16 @@ def list_scans(
 @router.get(
     "/{scan_id}",
     response_model=ScanResponse,
-    responses={404: {"model": ErrorResponse}},
+    responses={
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+        404: {"model": ErrorResponse},
+    },
     summary="Get a scan by ID",
 )
 def get_scan(
     scan_id: UUID,
+    _principal: RequireScan,
     db: Session = Depends(get_db),
 ) -> ScanResponse:
     service = ScanService(db)

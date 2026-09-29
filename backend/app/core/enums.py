@@ -29,9 +29,10 @@ class ScanStatus(StrEnum):
 
 
 class ScanDecision(StrEnum):
-    """Policy decision outcome (scoring/policy engines planned later)."""
+    """Policy decision outcome persisted on Scan metadata."""
 
     ALLOW = "ALLOW"
+    REVIEW = "REVIEW"
     SANITIZE = "SANITIZE"
     QUARANTINE = "QUARANTINE"
     BLOCK = "BLOCK"
@@ -59,5 +60,6 @@ class AuditEventType(StrEnum):
     RISK_EVALUATED = "RISK_EVALUATED"
     POLICY_EVALUATED = "POLICY_EVALUATED"
     DECISION_MADE = "DECISION_MADE"
+    SECURITY_EVENT_RECORDED = "SECURITY_EVENT_RECORDED"
     TOOL_BLOCKED = "TOOL_BLOCKED"
     HUMAN_APPROVAL_REQUIRED = "HUMAN_APPROVAL_REQUIRED"

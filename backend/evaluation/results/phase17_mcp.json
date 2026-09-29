@@ -1,0 +1,171 @@
+{
+  "phase": 17,
+  "generated_at": "2026-09-29T12:35:28.984590+00:00",
+  "passed": 15,
+  "total": 15,
+  "metrics": {
+    "unauthenticated_blocked": 1,
+    "invalid_credentials_blocked": 1,
+    "valid_credentials_accepted": 1,
+    "approved_server_allowed": 1,
+    "unknown_server_denied": 1,
+    "unknown_tool_denied": 1,
+    "tool_tampering_denied": 1,
+    "shadowing_denied": 1,
+    "invalid_parameters_denied": 1,
+    "invalid_output_denied": 1,
+    "replay_denied": 1,
+    "intent_mismatch_denied": 1,
+    "timeout_safely_handled": 1,
+    "malicious_output_contained": 1,
+    "cross_tenant_denied": 1,
+    "invariants_passed": 45,
+    "invariants_total": 45
+  },
+  "invariant_failures": [],
+  "rows": [
+    {
+      "case_id": "AUTHN-001",
+      "category": "unauthenticated_blocked",
+      "expected": "DENY",
+      "actual": "DENY",
+      "passed": true,
+      "reason_codes": []
+    },
+    {
+      "case_id": "AUTHN-002",
+      "category": "invalid_credentials_blocked",
+      "expected": "DENY",
+      "actual": "DENY",
+      "passed": true,
+      "reason_codes": []
+    },
+    {
+      "case_id": "AUTHN-003",
+      "category": "valid_credentials_accepted",
+      "expected": "ALLOW",
+      "actual": "ALLOW",
+      "passed": true,
+      "reason_codes": []
+    },
+    {
+      "case_id": "MCP-001",
+      "category": "approved_server_allowed",
+      "expected": "ALLOW",
+      "actual": "ALLOW",
+      "passed": true,
+      "reason_codes": []
+    },
+    {
+      "case_id": "MCP-002",
+      "category": "unknown_server_denied",
+      "expected": "DENY",
+      "actual": "DENY",
+      "passed": true,
+      "reason_codes": [
+        "MCP_SERVER_NOT_APPROVED",
+        "MCP_TOOL_SHADOWING"
+      ]
+    },
+    {
+      "case_id": "MCP-003",
+      "category": "unknown_tool_denied",
+      "expected": "DENY",
+      "actual": "DENY",
+      "passed": true,
+      "reason_codes": [
+        "MCP_TOOL_NOT_REGISTERED"
+      ]
+    },
+    {
+      "case_id": "MCP-004",
+      "category": "tool_tampering_denied",
+      "expected": "DENY",
+      "actual": "DENY",
+      "passed": true,
+      "reason_codes": [
+        "MCP_TOOL_DEFINITION_CHANGED"
+      ]
+    },
+    {
+      "case_id": "MCP-005",
+      "category": "shadowing_denied",
+      "expected": "DENY",
+      "actual": "DENY",
+      "passed": true,
+      "reason_codes": [
+        "MCP_SERVER_NOT_APPROVED",
+        "MCP_TOOL_SHADOWING"
+      ]
+    },
+    {
+      "case_id": "MCP-006",
+      "category": "invalid_parameters_denied",
+      "expected": "DENY",
+      "actual": "DENY",
+      "passed": true,
+      "reason_codes": [
+        "MCP_INPUT_INVALID"
+      ]
+    },
+    {
+      "case_id": "MCP-007",
+      "category": "invalid_output_denied",
+      "expected": "DENY",
+      "actual": "DENY",
+      "passed": true,
+      "reason_codes": [
+        "MCP_OUTPUT_INVALID"
+      ]
+    },
+    {
+      "case_id": "MCP-008",
+      "category": "replay_denied",
+      "expected": "DENY",
+      "actual": "DENY",
+      "passed": true,
+      "reason_codes": [
+        "MCP_LIMIT_EXCEEDED"
+      ]
+    },
+    {
+      "case_id": "MCP-009",
+      "category": "intent_mismatch_denied",
+      "expected": "DENY",
+      "actual": "DENY",
+      "passed": true,
+      "reason_codes": [
+        "MCP_INTENT_MISMATCH"
+      ]
+    },
+    {
+      "case_id": "MCP-010",
+      "category": "timeout_safely_handled",
+      "expected": "DENY",
+      "actual": "DENY",
+      "passed": true,
+      "reason_codes": [
+        "MCP_TIMEOUT"
+      ]
+    },
+    {
+      "case_id": "MCP-011",
+      "category": "malicious_output_contained",
+      "expected": "CONTAINED",
+      "actual": "CONTAINED",
+      "passed": true,
+      "reason_codes": []
+    },
+    {
+      "case_id": "MCP-012",
+      "category": "cross_tenant_denied",
+      "expected": "DENY",
+      "actual": "DENY",
+      "passed": true,
+      "reason_codes": [
+        "MCP_TENANT_MISMATCH"
+      ]
+    }
+  ],
+  "note": "Phase 17 authentication + Mock MCP evaluation. Separate from Phase 11 detection F1. No real MCP, no production IdP. AegisAI is NOT production-ready."
+}

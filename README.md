@@ -1,119 +1,93 @@
 # AegisAI
 
-**Agentic Prompt Injection Firewall** — a hackathon prototype for the ET AI Hackathon: Agentic Edition (Problem 2).
+## Agentic Prompt Injection Firewall
+
+AegisAI is a **runtime security layer** between untrusted content and agent tool actions. It detects prompt injection, scores risk, applies deterministic policy, and enforces authentication, authorization, and a tool firewall — including a Mock MCP gateway — before any simulated side effect.
+
+> **Hackathon prototype / demo.** Not production-ready. Evaluation metrics are dataset-only measurements, not production guarantees.
 
 ## Problem
 
-AI agents can be manipulated through direct and indirect prompt injection. Untrusted content in messages, documents, or tool outputs can override instructions, abuse tools, or exfiltrate sensitive context.
+AI agents do more than chat. They read documents, call tools, and may reach MCP servers. Untrusted content can attempt to:
+
+- Override instructions (direct / indirect prompt injection)
+- Hijack agent intent
+- Abuse tools (email, delete, shell)
+- Steal secrets or credentials
+- Poison tool definitions or shadow MCP tools
+
+Detecting injection text is not enough — a compromised plan must still be stopped before execution.
 
 ## Solution
 
-AegisAI is designed as a **runtime security layer** that inspects untrusted content before it can influence an AI agent. It is intended to detect and neutralize malicious prompt injections, allow legitimate content through with minimal disruption, and demonstrate agentic security capabilities.
+**Detect → Understand → Decide → Protect → Audit**
 
-> **Phase 2 status:** Scan domain, PostgreSQL models, Alembic migration, and scan metadata API are implemented. Detection, Groq calls, risk/policy engines, agent workflows, and dashboards are **not implemented yet**.
+Frozen pipeline:
 
-## Planned capabilities
+```text
+Untrusted Input
+ → Normalization
+ → Deterministic Detection + Prompt Guard + Semantic Safeguard
+ → Fusion → Risk → Policy (ALLOW / REVIEW / BLOCK)
+ → Agent Security Workflow
+ → Authentication → Authorization / Tenant Isolation
+ → Tool Firewall → Approval / Replay
+ → Mock MCP Gateway → Mock MCP / Mock Tools
+ → Untrusted Tool Output
+ → Security Event / Audit → Dashboard
+```
 
-The following are **planned** for later phases (not available in Phase 1):
+The backend is the source of truth for security decisions. The frontend never decides ALLOW/BLOCK.
 
-- Prompt injection detection
-- Attack classification
-- Risk scoring
-- Policy enforcement
-- Tool protection
-- Audit trail
-- Red-team evaluation
-- Multimodal input inspection
+## Key Features
 
-AegisAI does **not** claim that prompt injection can be completely eliminated. The design uses defense in depth to reduce residual risk.
+- Input normalization & deterministic detectors
+- Groq Prompt Guard + GPT-OSS-Safeguard semantic analysis
+- Evidence fusion & explainable risk scoring
+- Deterministic policy engine (ALLOW / REVIEW / BLOCK)
+- Agent runtime simulation with intent alignment
+- Development authentication + capability authorization
+- Tenant isolation (fail-closed)
+- Tool Firewall (allowlist, params, approval, replay)
+- Mock MCP gateway (fingerprint integrity, shadowing protection)
+- Persistent security events (hash + metadata; no raw prompts)
+- Evaluation dashboard & attack playground
 
 ## Architecture
 
-Planned pipeline (see [docs/architecture/system-architecture.md](docs/architecture/system-architecture.md)):
+See [docs/architecture/aegisai-final-architecture.md](docs/architecture/aegisai-final-architecture.md) and [docs/architecture/system-architecture.md](docs/architecture/system-architecture.md).
 
-```
-User/Application → API Gateway → Ingestion → Normalization
-  → Detection (rules + Prompt Guard + LLM classifier)
-  → Risk → Policy → Decision (ALLOW | SANITIZE | QUARANTINE | BLOCK)
-  → Agent Execution → Tool Firewall → Audit / Telemetry
-```
-
-## Technology stack
-
-| Layer | Stack |
-|-------|--------|
-| Backend | Python 3.11+, FastAPI, Pydantic, Uvicorn, SQLAlchemy 2.x, Alembic, httpx, pytest |
-| AI (planned) | Groq API — Prompt Guard / safeguard / agent models |
-| Frontend | Next.js, TypeScript, Tailwind CSS |
-| Infrastructure | Docker, Docker Compose, PostgreSQL |
-
-## Project structure
-
-```
-aegisai/
-├── backend/          # FastAPI application
-├── frontend/         # Next.js landing foundation
-├── docs/             # Architecture, security, evaluation
-├── datasets/         # Attack / benign evaluation placeholders
-├── docker-compose.yml
-└── README.md
-```
-
-## Local setup
+## Demo (quick start)
 
 ### Prerequisites
 
-- Python 3.11+
-- Node.js 20+
-- Docker & Docker Compose (optional, for full stack)
+- Python 3.11+, Node.js 20+, Docker (optional for Postgres)
 
-### Backend
+### 1. Backend
 
 ```bash
 cd backend
 python -m venv .venv
-
-# Windows
-.venv\Scripts\activate
-
-# macOS / Linux
-source .venv/bin/activate
-
+# Windows: .venv\Scripts\activate
+# macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
-copy .env.example .env   # or: cp .env.example .env
-# Edit backend/.env — set GROQ_API_KEY when you begin AI phases.
-# Backend reads backend/.env only (not the monorepo root .env).
-# DATABASE_URL default for local Postgres: postgresql+psycopg://aegisai:aegisai@localhost:5432/aegisai
-
-alembic upgrade head
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+cp .env.example .env
+# Set GROQ_API_KEY and AEGIS_DEMO_TOKEN_* values in backend/.env
+alembic upgrade head   # with Postgres running
+uvicorn app.main:app --reload --port 8000
 ```
 
-Verify:
-
-- `GET http://localhost:8000/` — application info
-- `GET http://localhost:8000/health` — health payload
-- `POST http://localhost:8000/api/v1/scans` — create scan metadata (detection not run yet)
-- `GET http://localhost:8000/api/v1/scans` — list scans
-- OpenAPI: `http://localhost:8000/docs`
-
-### Frontend
+### 2. Frontend
 
 ```bash
 cd frontend
-copy .env.example .env.local   # or: cp .env.example .env.local
 npm install
+cp .env.example .env.local
+# Set NEXT_PUBLIC_API_URL and matching NEXT_PUBLIC_AEGIS_DEMO_TOKEN_* values
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
-
-### Tests
-
-```bash
-cd backend
-pytest
-```
+Open http://localhost:3000
 
 ### Docker Compose
 
@@ -121,55 +95,97 @@ pytest
 docker compose up --build
 ```
 
-Services:
+Copy secrets into `backend/.env` (not committed). Compose uses `.env.example` by default for non-secret config.
 
-| Service | URL |
-|---------|-----|
-| Backend | http://localhost:8000 |
-| Frontend | http://localhost:3000 |
-| PostgreSQL | localhost:5432 |
+## Demo Scenarios (≈5 minutes)
 
-## Environment variables
+1. **Dashboard** — Detect → Understand → Decide → Protect → Audit  
+2. **Scanner** — Benign: “Find the employee PTO policy.”  
+3. **Scanner / Playground** — Direct injection → BLOCK/REVIEW, no tool execution  
+4. **Agent Runtime** — Intent hijack → Tool DENY  
+5. **Agent Runtime** — High-risk delete → REQUIRES_APPROVAL  
+6. **MCP Security** — Tamper / shadow → DENY  
+7. **Audit** — Persisted event (hash only; no raw prompt)  
+8. **Evaluation** — Dataset metrics (not production accuracy)
 
-### Backend (`backend/.env`)
+Detailed script: [docs/hackathon/demo-script.md](docs/hackathon/demo-script.md)
 
-| Variable | Purpose |
-|----------|---------|
-| `APP_ENV` | Environment name (`development`, etc.) |
-| `APP_NAME` | Application display name |
-| `DATABASE_URL` | SQLAlchemy PostgreSQL URL |
-| `GROQ_API_KEY` | Groq API key (**backend only**, never expose to frontend) |
-| `GROQ_DETECTION_MODEL` | Planned detection model id |
-| `GROQ_REASONING_MODEL` | Planned reasoning / safeguard model id |
-| `GROQ_AGENT_MODEL` | Planned agent model id |
-| `CORS_ORIGINS` | Comma-separated allowed origins |
-| `API_PREFIX` | Future API prefix (default `/api/v1`) |
-| `LOG_LEVEL` | Logging level |
+## Evaluation
 
-### Frontend (`frontend/.env.local`)
+| Suite | Result (stored / measured) | Note |
+|-------|----------------------------|------|
+| Live detection (`aegis_eval_v1`) | F1 **0.9706**, P **0.9925**, R **0.9496**, FPR **0.04**, FNR **0.0504** | Evaluation dataset only |
+| Offline detection | F1 **0.5107** | Rules-only / offline harness |
+| Live policy mix | ALLOW **13**, REVIEW **144**, BLOCK **26** | Conservative REVIEW on uncertainty |
+| Authorization (Phase 16) | **11/11** | Separate from detection F1 |
+| MCP (Phase 17) | **15/15** | Mock MCP only |
+| Security invariants | **45/45** | INV-01..45 |
 
-| Variable | Purpose |
-|----------|---------|
-| `NEXT_PUBLIC_API_URL` | Backend base URL (public, no secrets) |
+**Do not** claim “97% production accuracy,” “zero false positives,” or “production ready.”
 
-## Development commands
+Conservative REVIEW volume is intentional: uncertainty/conflict is **not** converted to BENIGN.
 
-| Command | Description |
-|---------|-------------|
-| `uvicorn app.main:app --reload` | Run backend (from `backend/`) |
-| `pytest` | Run backend tests |
-| `npm run dev` | Run frontend |
-| `npm run build` | Production frontend build |
-| `npm run lint` | Frontend lint |
-| `docker compose up --build` | Full local stack |
+## Security Design
 
-## Documentation
+- Fail-closed on missing auth, unknown tools/servers, integrity mismatch, tenant mismatch, replay
+- Provider failure → UNAVAILABLE / UNCERTAIN — never silent BENIGN
+- Policy BLOCK cannot be overridden by approval
+- Tool Firewall is the final execution boundary
+- MCP / tool outputs remain `TOOL_OUTPUT` / untrusted
+- No raw prompts, API keys, or bearer tokens in SecurityEvent records
 
-- [System architecture](docs/architecture/system-architecture.md)
-- [Security principles](docs/security/security-principles.md)
-- [Attack taxonomy](docs/security/attack-taxonomy.md)
-- [Project checklist](docs/PROJECT_CHECKLIST.md)
+## Limitations
 
-## License
+- Prototype / demo — **not production-ready**
+- Mock MCP only — no real MCP networking
+- Mock tools only — no real email, shell, DB mutation, arbitrary HTTP
+- Development bearer tokens — not OAuth/OIDC/SSO
+- In-process replay registry & metrics
+- Demo tokens may appear in frontend env for the UI (labeled Development Authentication)
 
-MIT — see [LICENSE](LICENSE).
+## Project Structure
+
+```text
+backend/app/          # FastAPI security pipeline
+backend/tests/        # pytest suite
+backend/evaluation/   # Offline/live eval artifacts
+frontend/             # Next.js security console
+docs/                 # Architecture, security, hackathon
+datasets/             # Evaluation corpora
+docker-compose.yml
+```
+
+## Local Development
+
+```bash
+# Backend tests
+cd backend && python -m pytest tests/ -q
+
+# Frontend
+cd frontend && npm test && npm run lint && npm run typecheck && npm run build
+```
+
+## Environment Variables
+
+Documented in `backend/.env.example` and `frontend/.env.example`.
+
+Never commit real `GROQ_API_KEY` or production tokens. Variable names only in docs.
+
+## Hackathon Materials
+
+- [Pitch (3 min)](docs/hackathon/pitch.md)
+- [Demo script](docs/hackathon/demo-script.md)
+- [Submission checklist](docs/hackathon/submission-checklist.md)
+- [Release candidate](docs/hackathon/release-candidate.md)
+
+## Future Work (post-hackathon)
+
+- Real MCP transport
+- Production IdP (OAuth/OIDC/SSO)
+- Real external tools with least privilege
+- Distributed observability / SIEM export
+- Production deployment hardening
+
+## License / Team
+
+ET AI Hackathon — Agentic Edition (Problem 2). See team submission form for credits.

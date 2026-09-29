@@ -88,6 +88,33 @@ class Settings(BaseSettings):
     safeguard_mode: str = Field(default="SUSPICIOUS_ONLY", alias="SAFEGUARD_MODE")
     safeguard_max_tokens: int = Field(default=1024, alias="SAFEGUARD_MAX_TOKENS")
 
+    # Phase 15 — evaluation harness timeout (does NOT mutate production detector timeouts)
+    evaluation_timeout_seconds: float = Field(
+        default=60.0,
+        alias="EVALUATION_TIMEOUT_SECONDS",
+        description=(
+            "Live evaluation harness budget per provider call. "
+            "Distinct from PROMPT_GUARD_TIMEOUT_SECONDS / SAFEGUARD_TIMEOUT_SECONDS."
+        ),
+    )
+    # Server-side security mode — never set by model/untrusted input
+    security_mode: str = Field(default="NORMAL", alias="AEGIS_SECURITY_MODE")
+
+    # Phase 17A — development authentication (tokens from environment only)
+    aegis_auth_mode: str = Field(default="development", alias="AEGIS_AUTH_MODE")
+    aegis_demo_token_user: str = Field(default="", alias="AEGIS_DEMO_TOKEN_USER")
+    aegis_demo_token_readonly: str = Field(default="", alias="AEGIS_DEMO_TOKEN_READONLY")
+    aegis_demo_token_agent: str = Field(default="", alias="AEGIS_DEMO_TOKEN_AGENT")
+    aegis_demo_token_service: str = Field(default="", alias="AEGIS_DEMO_TOKEN_SERVICE")
+    aegis_demo_token_disabled: str = Field(default="", alias="AEGIS_DEMO_TOKEN_DISABLED")
+    aegis_demo_token_tenant_b: str = Field(default="", alias="AEGIS_DEMO_TOKEN_TENANT_B")
+
+    # Phase 17B — MCP mock gateway limits
+    mcp_max_response_bytes: int = Field(default=65_536, alias="MCP_MAX_RESPONSE_BYTES")
+    mcp_max_output_items: int = Field(default=50, alias="MCP_MAX_OUTPUT_ITEMS")
+    mcp_timeout_seconds: float = Field(default=2.0, alias="MCP_TIMEOUT_SECONDS")
+    mcp_max_calls_per_action: int = Field(default=1, alias="MCP_MAX_CALLS_PER_ACTION")
+
     cors_origins: str = Field(
         default="http://localhost:3000",
         alias="CORS_ORIGINS",
