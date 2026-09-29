@@ -169,3 +169,14 @@ def test_authenticate_bearer_unit() -> None:
 
     bad = authenticate_bearer(None)
     assert bad.authenticated is False
+
+
+def test_openapi_exposes_bearer_authorize_scheme(raw_client: TestClient) -> None:
+    schema = raw_client.get("/openapi.json").json()
+    scheme = schema["components"]["securitySchemes"]["BearerAuth"]
+    assert scheme["type"] == "http"
+    assert scheme["scheme"] == "bearer"
+    operation = schema["paths"]["/api/v1/dashboard/evaluation"]["get"]
+    assert {"BearerAuth": []} in operation["security"]
+    param_names = [p["name"].lower() for p in operation.get("parameters", [])]
+    assert "authorization" not in param_names

@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import Annotated, Callable
 
-from fastapi import Depends, Header, Request
+from fastapi import Depends, Request
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.authentication.access_matrix import classify_path
 from app.authentication.authenticator import authenticate_bearer
@@ -16,10 +17,27 @@ from app.authentication.types import (
 )
 
 
+# Swagger UI drops a raw Authorization header parameter. It only sends that
+# header after the user clicks Authorize on an HTTP bearer security scheme.
+bearer_scheme = HTTPBearer(
+    auto_error=False,
+    scheme_name="BearerAuth",
+    description=(
+        "Paste the demo token only. Swagger adds the Bearer prefix. "
+        "Example: aegis-demo-user-token"
+    ),
+)
+
+
 def get_authentication_result(
-    authorization: Annotated[str | None, Header()] = None,
+    request: Request,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
 ) -> AuthenticationResult:
-    return authenticate_bearer(authorization)
+    if credentials is not None:
+        return authenticate_bearer(f"{credentials.scheme} {credentials.credentials}")
+    # Non-Bearer values never become credentials; keep the raw header so
+    # malformed input still fails closed with the existing reason code.
+    return authenticate_bearer(request.headers.get("authorization"))
 
 
 def require_authenticated(
