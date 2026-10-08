@@ -174,6 +174,7 @@ Never commit real `GROQ_API_KEY` or production tokens. Variable names only in do
 ## Hackathon Materials
 
 - [Pitch (3 min)](docs/hackathon/pitch.md)
+- [Pitch deck PDF](docs/hackathon/AegisAI-Pitch-Deck.pdf) / [PPTX](docs/hackathon/AegisAI-Pitch-Deck.pptx)
 - [Demo script](docs/hackathon/demo-script.md)
 - [Submission checklist](docs/hackathon/submission-checklist.md)
 - [Release candidate](docs/hackathon/release-candidate.md)

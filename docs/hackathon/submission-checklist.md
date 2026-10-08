@@ -53,11 +53,11 @@
 - [x] README
 - [x] Architecture diagram
 - [ ] Demo video _(record separately)_
-- [x] Pitch
+- [x] Pitch _(PDF + PPTX in docs/hackathon/)_
 - [ ] Screenshots _(capture separately)_
-- [ ] Repository link
+- [x] Repository link _(https://github.com/VarunPunzuri99/AegisAI)_
 - [x] Environment setup
 - [x] Known limitations
-- [ ] License if required
+- [x] License if required _(MIT)_
 - [ ] Team information
 - [ ] Hackathon submission form

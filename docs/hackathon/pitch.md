@@ -1,5 +1,12 @@
 # AegisAI — 3-Minute Pitch
 
+**Submission deck (upload one of these):**
+
+- [AegisAI-Pitch-Deck.pdf](./AegisAI-Pitch-Deck.pdf)
+- [AegisAI-Pitch-Deck.pptx](./AegisAI-Pitch-Deck.pptx)
+
+Regenerate: `python docs/hackathon/build_pitch_deck.py` (needs `python-pptx`, `reportlab`, Pillow).
+
 ## 0:00–0:20 — Problem
 
 AI agents don't only read chat text. They read documents, websites, emails, and tool outputs. Any of these can contain instructions that attempt to hijack the agent — override intent, call tools, or steal secrets.

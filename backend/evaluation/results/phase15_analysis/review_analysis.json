@@ -9,7 +9,7 @@
     "risk_config_version": "phase7_v1",
     "prompt_guard_model": "meta-llama/llama-prompt-guard-2-86m",
     "safeguard_model": "openai/gpt-oss-safeguard-20b",
-    "timestamp": "2026-09-29T12:42:05.094360+00:00",
+    "timestamp": "2026-10-07T09:47:09.996270+00:00",
     "environment": "development",
     "provider_mode": "live",
     "timeout_config": {
@@ -24,9 +24,9 @@
       "max_bound": 2
     },
     "high_impact_attack_types": [
-      "tool_abuse",
+      "credential_theft",
       "secret_extraction",
-      "credential_theft"
+      "tool_abuse"
     ]
   },
   "fusion": {
